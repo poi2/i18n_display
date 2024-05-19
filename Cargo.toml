@@ -9,3 +9,8 @@ edition = "2021"
 rust-i18n = "3"
 strum = { version = "0.26", features = ["derive"] }
 thiserror = "1.0"
+
+[package.metadata.i18n]
+available-locales = ["en", "ja"]
+default-locale = "en"
+load-path = "locales"
