@@ -8,18 +8,24 @@ use thiserror::Error;
 i18n!("locales", fallback = "en");
 
 #[derive(Error, Debug)]
+// #[derive(I18nDisplay)]
 pub enum DomainError {
     #[error("Insufficient funds")]
+    // #[i18n_key("InsufficientFunds")]
     InsufficientFunds(String),
     #[error("Out of stock")]
+    // #[i18n_key("OutOfStock")]
     OutOfStock(String),
 }
 
 #[derive(Error, Debug)]
+// #[derive(I18nDisplay)]
 pub enum UseCaseError {
     #[error("Domain error")]
+    // #[i18n_deligate]
     Domain(DomainError),
     #[error("Permission deny")]
+    // #[i18n_key("PermissionDeny")]
     PermissionDeny(String),
 }
 
@@ -32,12 +38,12 @@ pub enum LanguageCode {
 }
 
 #[allow(dead_code)]
-trait ErrorTranslator {
-    fn to_translated_message(&self, language_code: LanguageCode) -> String;
+trait I18nDisplay {
+    fn to_i18n_string(&self, language_code: LanguageCode) -> String;
 }
 
-impl ErrorTranslator for DomainError {
-    fn to_translated_message(&self, language_code: LanguageCode) -> String {
+impl I18nDisplay for DomainError {
+    fn to_i18n_string(&self, language_code: LanguageCode) -> String {
         match self {
             Self::InsufficientFunds(_) => {
                 t!("InsufficientFunds", locale = &language_code.to_string())
@@ -48,10 +54,10 @@ impl ErrorTranslator for DomainError {
     }
 }
 
-impl ErrorTranslator for UseCaseError {
-    fn to_translated_message(&self, language_code: LanguageCode) -> String {
+impl I18nDisplay for UseCaseError {
+    fn to_i18n_string(&self, language_code: LanguageCode) -> String {
         match self {
-            Self::Domain(inner) => inner.to_translated_message(language_code),
+            Self::Domain(inner) => inner.to_i18n_string(language_code),
             Self::PermissionDeny(_) => {
                 t!("PermissionDeny", locale = &language_code.to_string()).to_string()
             }
@@ -65,9 +71,9 @@ mod test {
 
     #[test]
     fn create_translated_message_from_domain_error_for_ja() {
-        let domain_error = DomainError::InsufficientFunds("AccountId: 1".to_string());
+        let domain_error = DomainError::InsufficientFunds("FooBar".to_string());
 
-        let actual = domain_error.to_translated_message(LanguageCode::Ja);
+        let actual = domain_error.to_i18n_string(LanguageCode::Ja);
 
         assert_eq!(
             actual,
@@ -78,9 +84,9 @@ mod test {
 
     #[test]
     fn create_translated_message_from_domain_error_for_en() {
-        let domain_error = DomainError::InsufficientFunds("AccountId: 1".to_string());
+        let domain_error = DomainError::InsufficientFunds("FooBar".to_string());
 
-        let actual = domain_error.to_translated_message(LanguageCode::En);
+        let actual = domain_error.to_i18n_string(LanguageCode::En);
 
         assert_eq!(
             actual,
