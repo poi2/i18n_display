@@ -1,11 +1,16 @@
 // use strum::{Display, EnumString};
 // use thiserror::Error;
+use rust_i18n::t;
 
-// // For rust_i18n
-// i18n!("locales", fallback = "en");
+// For rust_i18n
+i18n!("locales", fallback = "en");
+
+fn foo() -> String {
+    t!("InsufficientFunds").to_string()
+}
 
 // #[derive(Error, Debug)]
-// // #[derive(I18nDisplay)]
+// // #[derive(ToI18nString)]
 // pub enum DomainError {
 //     #[error("Insufficient funds")]
 //     // #[i18n_key("InsufficientFunds")]
@@ -16,7 +21,7 @@
 // }
 
 // #[derive(Error, Debug)]
-// // #[derive(I18nDisplay)]
+// // #[derive(ToI18nString)]
 // pub enum UseCaseError {
 //     #[error("Domain error")]
 //     // #[i18n_delegate]
@@ -35,11 +40,11 @@
 // }
 
 // #[allow(dead_code)]
-// trait I18nDisplay {
+// trait ToI18nString {
 //     fn to_i18n_string(&self, language_code: LanguageCode) -> String;
 // }
 
-// impl I18nDisplay for DomainError {
+// impl ToI18nString for DomainError {
 //     fn to_i18n_string(&self, language_code: LanguageCode) -> String {
 //         match self {
 //             Self::InsufficientFunds(_) => {
@@ -51,7 +56,7 @@
 //     }
 // }
 
-// impl I18nDisplay for UseCaseError {
+// impl ToI18nString for UseCaseError {
 //     fn to_i18n_string(&self, language_code: LanguageCode) -> String {
 //         match self {
 //             Self::Domain(inner) => inner.to_i18n_string(language_code),

@@ -2,3 +2,6 @@ _version: 1
 "InsufficientFunds": "この取引を完了するための残高が不足しています。残高を確認してもう一度お試しください。"
 "OutOfStock": "この商品は現在在庫切れです。後ほど再度ご確認ください。"
 "PermissionDeny": "このリソースにアクセスする権限がありません。管理者にお問い合わせください。"
+"MultipleTuple": "1ja"
+"FieldError": "2ja"
+"FooError": "3ja"
