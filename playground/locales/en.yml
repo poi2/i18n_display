@@ -1,7 +1,8 @@
 _version: 1
-"InsufficientFunds": "You do not have enough funds to complete this transaction. Please check your balance and try again."
-"OutOfStock": "This item is currently out of stock. Please check back later."
-"PermissionDeny": "You do not have permission to access this resource. Please contact your administrator."
-"MultipleTuple": "1en"
-"FieldError": "2en"
-"FooError": "3en"
+"error":
+  "AuthorizationError": "You do not have permission."
+  "InsufficientFunds": "You do not have enough funds."
+  "OutOfStock": "This item is currently out of stock."
+  "ResourceNotFound": "Resource not found."
+  "ValidationError": "Invalid input value."
+
