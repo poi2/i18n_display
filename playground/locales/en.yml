@@ -1,8 +1,0 @@
-_version: 1
-"error":
-  "AuthorizationError": "You do not have permission."
-  "InsufficientFunds": "You do not have enough funds."
-  "OutOfStock": "This item is currently out of stock."
-  "ResourceNotFound": "Resource not found."
-  "ValidationError": "Invalid input value."
-

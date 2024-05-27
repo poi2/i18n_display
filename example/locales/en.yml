@@ -1,0 +1,9 @@
+_version: 1
+"error":
+  "UseCaseError":
+    "AuthorizationError": "You do not have permission."
+  "DomainError":
+    "InsufficientFunds": "You do not have enough funds."
+    "OutOfStock": "This item is currently out of stock."
+    "ResourceNotFound": "Resource not found."
+    "ValidationError": "Invalid input value."

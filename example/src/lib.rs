@@ -13,32 +13,29 @@ mod test {
     use test_case::test_case;
 
     #[derive(I18nError)]
-    #[i18n_language_codes(Ja, En)]
+    #[i18n_language_codes(En, Fr)]
     enum DomainError {
-        #[i18n_key("error.InsufficientFunds")]
+        #[i18n_key("error.DomainError.InsufficientFunds")]
         InsufficientFunds(String),
-        #[i18n_key("error.OutOfStock")]
+        #[i18n_key("error.DomainError.OutOfStock")]
         OutOfStock,
-        #[i18n_key("error.ValidationError")]
+        #[i18n_key("error.DomainError.ValidationError")]
         Validation(String, String),
-        #[i18n_key("error.ResourceNotFound")]
+        #[i18n_key("error.DomainError.ResourceNotFound")]
         ResourceNotFound { field: String, id: String },
     }
 
     #[derive(I18nError)]
-    #[i18n_language_codes(Ja, En)]
+    #[i18n_language_codes(En, Fr)]
     enum UseCaseError {
-        #[i18n_key("error.AuthorizationError")]
+        #[i18n_key("error.UseCaseError.AuthorizationError")]
         Authorization,
         #[i18n_delegate]
         Domain(DomainError),
     }
 
-    // TODO: Compile error になるテストケースを作る
-    // https://docs.rs/trybuild/latest/trybuild/
-
     #[test_case(LanguageCode::En, "You do not have enough funds.")]
-    #[test_case(LanguageCode::Ja, "この取引を完了するための残高が不足しています。")]
+    #[test_case(LanguageCode::Fr, "Vous n'avez pas assez de fonds.")]
     fn test_unnamed_enum(language_code: LanguageCode, expected: &str) {
         let error = DomainError::InsufficientFunds("".to_string());
 
@@ -46,7 +43,7 @@ mod test {
     }
 
     #[test_case(LanguageCode::En, "This item is currently out of stock.")]
-    #[test_case(LanguageCode::Ja, "この商品は現在在庫切れです。")]
+    #[test_case(LanguageCode::Fr, "Cet article est actuellement en rupture de stock.")]
     fn test_empty_unnamed_enum(language_code: LanguageCode, expected: &str) {
         let error = DomainError::OutOfStock;
 
@@ -54,7 +51,7 @@ mod test {
     }
 
     #[test_case(LanguageCode::En, "Invalid input value.")]
-    #[test_case(LanguageCode::Ja, "無効な入力です。")]
+    #[test_case(LanguageCode::Fr, "Valeur d'entrée invalide.")]
     fn test_unnamed_enum_with_multiple_value(language_code: LanguageCode, expected: &str) {
         let error = DomainError::Validation("foo".to_string(), "bar".to_string());
 
@@ -62,7 +59,7 @@ mod test {
     }
 
     #[test_case(LanguageCode::En, "Resource not found.")]
-    #[test_case(LanguageCode::Ja, "リソースが見つかりません。")]
+    #[test_case(LanguageCode::Fr, "Ressource non trouvée.")]
     fn test_field_enum(language_code: LanguageCode, expected: &str) {
         let error = DomainError::ResourceNotFound {
             field: "foo".to_string(),
@@ -73,7 +70,7 @@ mod test {
     }
 
     #[test_case(LanguageCode::En, "You do not have permission.")]
-    #[test_case(LanguageCode::Ja, "このリソースに対するアクセス権限がありません。")]
+    #[test_case(LanguageCode::Fr, "Vous n'avez pas la permission.")]
     fn test_outside_enum(language_code: LanguageCode, expected: &str) {
         let error = UseCaseError::Authorization;
 
@@ -81,7 +78,7 @@ mod test {
     }
 
     #[test_case(LanguageCode::En, "You do not have enough funds.")]
-    #[test_case(LanguageCode::Ja, "この取引を完了するための残高が不足しています。")]
+    #[test_case(LanguageCode::Fr, "Vous n'avez pas assez de fonds.")]
     fn test_delegation(language_code: LanguageCode, expected: &str) {
         let error = UseCaseError::Domain(DomainError::InsufficientFunds("".to_string()));
 

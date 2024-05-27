@@ -13,11 +13,19 @@ extern crate quote;
 #[proc_macro_derive(I18nError, attributes(i18n_key, i18n_delegate, i18n_language_codes))]
 pub fn derive_i18n_error(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    // dbg!(input.clone());
+
     derive(&input).into()
 }
 
 fn derive(input: &DeriveInput) -> TokenStream2 {
+    let language_codes = get_language_codes(input);
+
+    let enum_struct = get_enum_struct(input);
+
+    generate_impl(enum_struct, language_codes)
+}
+
+fn get_language_codes(input: &DeriveInput) -> Vec<Ident> {
     let language_codes = input
         .attrs
         .iter()
@@ -43,7 +51,7 @@ fn derive(input: &DeriveInput) -> TokenStream2 {
                         })
                         .flatten()
                         .collect::<Vec<_>>();
-                    if language_codes.len() > 0 {
+                    if !language_codes.is_empty() {
                         Some(language_codes)
                     } else {
                         None
@@ -58,23 +66,25 @@ fn derive(input: &DeriveInput) -> TokenStream2 {
         })
         .flatten()
         .collect::<Vec<_>>();
-    if language_codes.len() == 0 {
+
+    if language_codes.is_empty() {
         panic!("i18n_language_codes must be specified.");
     }
 
+    language_codes
+}
+
+fn get_enum_struct(input: &DeriveInput) -> EnumStruct {
     match &input.data {
         Data::Struct(_) => panic!("I18nError is only supported for Enum."),
         Data::Enum(data) => {
-            // dbg!(data.variants.clone());
             let enum_variants: Vec<EnumVariant> = data
                 .variants
                 .iter()
                 .map(|variant| {
-                    // dbg!(variant.clone());
                     let mut i18n_key = None;
                     let mut i18n_delegate = false;
                     variant.attrs.iter().for_each(|attr| {
-                        // dbg!(attr.clone());
                         let meta = &attr.meta.clone();
                         match meta {
                             Meta::List(list) => {
@@ -107,14 +117,11 @@ fn derive(input: &DeriveInput) -> TokenStream2 {
                     }
                 })
                 .collect();
-            // dbg!(enum_variants.clone());
-            let enum_struct = EnumStruct {
+
+            EnumStruct {
                 ident: input.ident.clone(),
                 enum_variants,
-            };
-            let token_stream = generate_impl(enum_struct, language_codes);
-            // dbg!(token_stream.to_string());
-            token_stream
+            }
         }
         Data::Union(_) => panic!("I18nError is only supported for Enum."),
     }
@@ -129,7 +136,7 @@ fn generate_impl(enum_struct: EnumStruct, language_codes: Vec<Ident>) -> TokenSt
         .map(|enum_variant| generate_inner_function(enum_variant, language_codes.clone()))
         .collect::<Vec<_>>();
 
-    let function = quote! {
+    quote! {
         impl ToI18nString for #ident {
             fn to_i18n_string(&self, language_code: LanguageCode) -> String {
                 use rust_i18n::t;
@@ -139,9 +146,7 @@ fn generate_impl(enum_struct: EnumStruct, language_codes: Vec<Ident>) -> TokenSt
                 }
             }
         }
-    };
-    // dbg!(function.to_string().clone());
-    function
+    }
 }
 
 #[derive(Clone)]
@@ -157,15 +162,12 @@ struct EnumVariant {
 }
 
 fn generate_inner_function(enum_variant: EnumVariant, language_codes: Vec<Ident>) -> TokenStream2 {
-    let variant = enum_variant.variant;
-    let i18n_key_delegate = enum_variant.i18n_key_delegate;
-    let function = match i18n_key_delegate {
+    match enum_variant.i18n_key_delegate {
         I18nKeyDelegate::I18nKey(key) => {
-            generate_i18n_inner_function(variant.clone(), key, language_codes)
+            generate_i18n_inner_function(enum_variant.variant, key, language_codes)
         }
-        I18nKeyDelegate::Delegate => generate_delegate_inner_function(variant.clone()),
-    };
-    function
+        I18nKeyDelegate::Delegate => generate_delegate_inner_function(enum_variant.variant),
+    }
 }
 
 fn generate_i18n_inner_function(
@@ -173,21 +175,19 @@ fn generate_i18n_inner_function(
     key: TokenStream2,
     language_codes: Vec<Ident>,
 ) -> TokenStream2 {
-    // dbg!(variant.clone());
     let ident = variant.ident;
     let language_code_match = language_codes
         .iter()
         .map(|language_code| {
             quote! {
                 LanguageCode::#language_code => {
-                    // #key.to_string()
                     t!(#key, locale = LanguageCode::#language_code.to_string().as_str()).to_string()
                 },
             }
         })
         .collect::<Vec<TokenStream2>>();
 
-    let token_stream = match variant.fields {
+    match variant.fields {
         syn::Fields::Named(_) => {
             let field_token_stream = variant
                 .fields
@@ -197,7 +197,7 @@ fn generate_i18n_inner_function(
                     quote! { #field_ident, }
                 })
                 .collect::<Vec<TokenStream2>>();
-            // FIXME: LanguageCode で match して、指定された言語に翻訳する
+
             quote! {
                 Self::#ident { #(#field_token_stream)* } => match language_code {
                     #(#language_code_match)*
@@ -210,7 +210,7 @@ fn generate_i18n_inner_function(
         syn::Fields::Unnamed(_) => {
             let field_token_stream: Vec<TokenStream2> =
                 variant.fields.iter().map(|_| quote! { _, }).collect();
-            // FIXME: LanguageCode で match して、指定された言語に翻訳する
+
             quote! {
                 Self::#ident(#(#field_token_stream)*) => match language_code {
                     #(#language_code_match)*
@@ -221,7 +221,6 @@ fn generate_i18n_inner_function(
             }
         }
         syn::Fields::Unit => {
-            // FIXME: LanguageCode で match して、指定された言語に翻訳する
             quote! {
                 Self::#ident => match language_code {
                     #(#language_code_match)*
@@ -231,15 +230,12 @@ fn generate_i18n_inner_function(
                 }
             }
         }
-    };
-    // dbg!(token_stream.to_string());
-    token_stream
+    }
 }
 
 fn generate_delegate_inner_function(variant: Variant) -> TokenStream2 {
-    // dbg!(variant.clone());
     let ident = variant.ident;
-    let token_stream = match variant.fields {
+    match variant.fields {
         syn::Fields::Named(_) => {
             panic!("Struct variant is not supported for i18n_delegate");
         }
@@ -254,9 +250,7 @@ fn generate_delegate_inner_function(variant: Variant) -> TokenStream2 {
         syn::Fields::Unit => {
             panic!("Unit variant is not supported for i18n_delegate");
         }
-    };
-    // dbg!(token_stream.to_string());
-    token_stream
+    }
 }
 
 #[derive(Debug, Clone)]

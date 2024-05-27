@@ -1,7 +1,0 @@
-_version: 1
-"error":
-  "AuthorizationError": "このリソースに対するアクセス権限がありません。"
-  "InsufficientFunds": "この取引を完了するための残高が不足しています。"
-  "OutOfStock": "この商品は現在在庫切れです。"
-  "ResourceNotFound": "リソースが見つかりません。"
-  "ValidationError": "無効な入力です。"
