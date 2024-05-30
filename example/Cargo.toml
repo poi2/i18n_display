@@ -11,8 +11,3 @@ i18n_error = { path = "../" }
 
 [dev-dependencies]
 test-case = "3.3.1"
-
-[package.metadata.i18n]
-available-locales = ["en", "fr", "ja"]
-default-locale = "en"
-load-path = "locales"

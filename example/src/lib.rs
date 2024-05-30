@@ -12,76 +12,150 @@ mod test {
     use i18n_error::{I18nError, LanguageCode, ToI18nString};
     use test_case::test_case;
 
-    #[derive(I18nError)]
-    #[i18n_language_codes(En, Fr)]
-    enum DomainError {
-        #[i18n_key("error.DomainError.InsufficientFunds")]
-        InsufficientFunds(String),
-        #[i18n_key("error.DomainError.OutOfStock")]
-        OutOfStock,
-        #[i18n_key("error.DomainError.ValidationError")]
-        Validation(String, String),
-        #[i18n_key("error.DomainError.ResourceNotFound")]
-        ResourceNotFound { field: String, id: String },
-    }
+    #[test_case(LanguageCode::En, "Resource not found.")]
+    #[test_case(LanguageCode::Fr, "Ressource non trouvée.")]
+    fn test_to_i18n_string_for_unit_like_enum(language_code: LanguageCode, expected: &str) {
+        #[derive(I18nError)]
+        #[i18n_language_codes(En, Fr)]
+        enum DomainError {
+            #[i18n_key("error.DomainError.ResourceNotFound")]
+            ResourceNotFound,
+        }
 
-    #[derive(I18nError)]
-    #[i18n_language_codes(En, Fr)]
-    enum UseCaseError {
-        #[i18n_key("error.UseCaseError.AuthorizationError")]
-        Authorization,
-        #[i18n_delegate]
-        Domain(DomainError),
-    }
-
-    #[test_case(LanguageCode::En, "You do not have enough funds.")]
-    #[test_case(LanguageCode::Fr, "Vous n'avez pas assez de fonds.")]
-    fn test_unnamed_enum(language_code: LanguageCode, expected: &str) {
-        let error = DomainError::InsufficientFunds("".to_string());
-
-        assert_eq!(error.to_i18n_string(language_code), expected.to_string());
-    }
-
-    #[test_case(LanguageCode::En, "This item is currently out of stock.")]
-    #[test_case(LanguageCode::Fr, "Cet article est actuellement en rupture de stock.")]
-    fn test_empty_unnamed_enum(language_code: LanguageCode, expected: &str) {
-        let error = DomainError::OutOfStock;
-
-        assert_eq!(error.to_i18n_string(language_code), expected.to_string());
-    }
-
-    #[test_case(LanguageCode::En, "Invalid input value.")]
-    #[test_case(LanguageCode::Fr, "Valeur d'entrée invalide.")]
-    fn test_unnamed_enum_with_multiple_value(language_code: LanguageCode, expected: &str) {
-        let error = DomainError::Validation("foo".to_string(), "bar".to_string());
+        let error = DomainError::ResourceNotFound;
 
         assert_eq!(error.to_i18n_string(language_code), expected.to_string());
     }
 
     #[test_case(LanguageCode::En, "Resource not found.")]
     #[test_case(LanguageCode::Fr, "Ressource non trouvée.")]
-    fn test_field_enum(language_code: LanguageCode, expected: &str) {
+    fn test_to_i18n_string_for_single_tuple_like_enum(language_code: LanguageCode, expected: &str) {
+        #[derive(I18nError)]
+        #[i18n_language_codes(En, Fr)]
+        enum DomainError {
+            #[i18n_key("error.DomainError.ResourceNotFound")]
+            ResourceNotFound(String),
+        }
+
+        let error = DomainError::ResourceNotFound("Beer".to_string());
+
+        assert_eq!(error.to_i18n_string(language_code), expected.to_string());
+    }
+
+    #[test_case(LanguageCode::En, "Resource not found.")]
+    #[test_case(LanguageCode::Fr, "Ressource non trouvée.")]
+    fn test_to_i18n_string_for_multiple_tuple_like_enum(
+        language_code: LanguageCode,
+        expected: &str,
+    ) {
+        #[derive(I18nError)]
+        #[i18n_language_codes(En, Fr)]
+        enum DomainError {
+            #[i18n_key("error.DomainError.ResourceNotFound")]
+            ResourceNotFound(String, String),
+        }
+
+        let error = DomainError::ResourceNotFound("Beer".to_string(), "1".to_string());
+
+        assert_eq!(error.to_i18n_string(language_code), expected.to_string());
+    }
+
+    #[test_case(LanguageCode::En, "Resource not found.")]
+    #[test_case(LanguageCode::Fr, "Ressource non trouvée.")]
+    fn test_to_i18n_string_for_field_like_enum(language_code: LanguageCode, expected: &str) {
+        #[derive(I18nError)]
+        #[i18n_language_codes(En, Fr)]
+        enum DomainError {
+            #[i18n_key("error.DomainError.ResourceNotFound")]
+            ResourceNotFound { resource: String, id: String },
+        }
+
         let error = DomainError::ResourceNotFound {
-            field: "foo".to_string(),
-            id: "foo-1".to_string(),
+            resource: "Beer".to_string(),
+            id: "1".to_string(),
         };
 
         assert_eq!(error.to_i18n_string(language_code), expected.to_string());
     }
 
-    #[test_case(LanguageCode::En, "You do not have permission.")]
-    #[test_case(LanguageCode::Fr, "Vous n'avez pas la permission.")]
-    fn test_outside_enum(language_code: LanguageCode, expected: &str) {
-        let error = UseCaseError::Authorization;
+    #[test_case(LanguageCode::En, "Resource not found.")]
+    #[test_case(LanguageCode::Fr, "Ressource non trouvée.")]
+    fn test_delegation_to_enum(language_code: LanguageCode, expected: &str) {
+        #[derive(I18nError)]
+        #[i18n_language_codes(En, Fr)]
+        enum DomainError {
+            #[i18n_delegate]
+            ResourceNotFound(ResourceNotFound),
+        }
+
+        #[allow(unused)]
+        #[derive(I18nError)]
+        #[i18n_language_codes(En, Fr)]
+        enum ResourceNotFound {
+            #[i18n_key("error.DomainError.ResourceNotFound")]
+            Beer,
+        }
+
+        let error = DomainError::ResourceNotFound(ResourceNotFound::Beer);
 
         assert_eq!(error.to_i18n_string(language_code), expected.to_string());
     }
 
-    #[test_case(LanguageCode::En, "You do not have enough funds.")]
-    #[test_case(LanguageCode::Fr, "Vous n'avez pas assez de fonds.")]
-    fn test_delegation(language_code: LanguageCode, expected: &str) {
-        let error = UseCaseError::Domain(DomainError::InsufficientFunds("".to_string()));
+    #[test_case(LanguageCode::En, "Resource not found.")]
+    #[test_case(LanguageCode::Fr, "Ressource non trouvée.")]
+    fn test_delegation_to_struct(language_code: LanguageCode, expected: &str) {
+        #[derive(I18nError)]
+        #[i18n_language_codes(En, Fr)]
+        enum DomainError {
+            #[i18n_delegate]
+            ResourceNotFound(ResourceNotFound),
+        }
+
+        #[allow(unused)]
+        #[derive(I18nError)]
+        #[i18n_key("error.DomainError.ResourceNotFound")]
+        #[i18n_language_codes(En, Fr)]
+        struct ResourceNotFound {
+            id: String,
+        }
+
+        let error = DomainError::ResourceNotFound(ResourceNotFound {
+            id: "1".to_string(),
+        });
 
         assert_eq!(error.to_i18n_string(language_code), expected.to_string());
+    }
+
+    #[test_case(LanguageCode::En, "Resource not found.")]
+    #[test_case(LanguageCode::Fr, "Ressource non trouvée.")]
+    fn test_to_i18n_string_for_struct(language_code: LanguageCode, expected: &str) {
+        #[allow(unused)]
+        #[derive(I18nError)]
+        #[i18n_language_codes(En, Fr)]
+        #[i18n_key("error.DomainError.ResourceNotFound")]
+        struct ResourceNotFound {
+            resource: String,
+        }
+
+        let error = ResourceNotFound {
+            resource: "Beer".to_string(),
+        };
+
+        assert_eq!(error.to_i18n_string(language_code), expected.to_string());
+    }
+
+    #[test_case(LanguageCode::En)]
+    #[test_case(LanguageCode::Fr => panics "Unsupported language code: Fr")]
+    fn test_fail_to_i18n_string_with_unsupported_language_code(language_code: LanguageCode) {
+        #[derive(I18nError)]
+        #[i18n_language_codes(En)]
+        enum DomainError {
+            #[i18n_key("error.DomainError.ResourceNotFound")]
+            ResourceNotFound,
+        }
+
+        let error = DomainError::ResourceNotFound;
+
+        error.to_i18n_string(language_code);
     }
 }

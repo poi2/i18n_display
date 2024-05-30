@@ -18,9 +18,14 @@ pub fn derive_i18n_error(input: TokenStream) -> TokenStream {
 fn derive(input: &DeriveInput) -> TokenStream2 {
     let language_codes = get_language_codes(input);
 
-    let enum_struct = get_enum_struct(input);
+    let i18n_error_type = get_enum_struct(input);
 
-    generate_impl(enum_struct, language_codes)
+    match i18n_error_type {
+        I18nErrorType::Struct(struct_struct) => {
+            generate_impl_for_struct(struct_struct, language_codes)
+        }
+        I18nErrorType::Enum(enum_struct) => generate_impl_for_enum(enum_struct, language_codes),
+    }
 }
 
 fn get_language_codes(input: &DeriveInput) -> Vec<Ident> {
@@ -72,9 +77,43 @@ fn get_language_codes(input: &DeriveInput) -> Vec<Ident> {
     language_codes
 }
 
-fn get_enum_struct(input: &DeriveInput) -> EnumStruct {
+enum I18nErrorType {
+    Struct(StructStruct),
+    Enum(EnumStruct),
+}
+
+fn get_enum_struct(input: &DeriveInput) -> I18nErrorType {
     match &input.data {
-        Data::Struct(_) => panic!("I18nError is only supported for Enum."),
+        Data::Struct(_) => {
+            let token_streams = input
+                .attrs
+                .iter()
+                .filter_map(|attr| match attr.meta.clone() {
+                    Meta::List(list) => {
+                        if list.path.is_ident("i18n_key") {
+                            Some(list.tokens.clone())
+                        } else {
+                            None
+                        }
+                    }
+                    _ => {
+                        panic!("i18n_error must be a list.");
+                    }
+                })
+                .collect::<Vec<TokenStream2>>();
+
+            if token_streams.len() != 1 {
+                panic!("i18n_error must be specified only once as Struct attribute.");
+            }
+            let token_stream = token_streams.first().unwrap();
+
+            let struct_struct = StructStruct {
+                ident: input.ident.clone(),
+                i18n_key: token_stream.clone(),
+            };
+
+            I18nErrorType::Struct(struct_struct)
+        }
         Data::Enum(data) => {
             let enum_variants: Vec<EnumVariant> = data
                 .variants
@@ -116,16 +155,16 @@ fn get_enum_struct(input: &DeriveInput) -> EnumStruct {
                 })
                 .collect();
 
-            EnumStruct {
+            I18nErrorType::Enum(EnumStruct {
                 ident: input.ident.clone(),
                 enum_variants,
-            }
+            })
         }
         Data::Union(_) => panic!("I18nError is only supported for Enum."),
     }
 }
 
-fn generate_impl(enum_struct: EnumStruct, language_codes: Vec<Ident>) -> TokenStream2 {
+fn generate_impl_for_enum(enum_struct: EnumStruct, language_codes: Vec<Ident>) -> TokenStream2 {
     let ident = enum_struct.ident.clone();
     let inner_function = enum_struct
         .enum_variants
@@ -134,6 +173,7 @@ fn generate_impl(enum_struct: EnumStruct, language_codes: Vec<Ident>) -> TokenSt
         .map(|enum_variant| generate_inner_function(enum_variant, language_codes.clone()))
         .collect::<Vec<_>>();
 
+    // FIXME: language_code: Into<LanguageCode> とすることで、わざわざユーザーに変換を意識せずに使えるようにする
     quote! {
         impl ToI18nString for #ident {
             fn to_i18n_string(&self, language_code: LanguageCode) -> String {
@@ -147,16 +187,63 @@ fn generate_impl(enum_struct: EnumStruct, language_codes: Vec<Ident>) -> TokenSt
     }
 }
 
-#[derive(Clone)]
+// FIXME: struct に対応する場合、generic を対応する必要がある
+fn generate_impl_for_struct(
+    struct_struct: StructStruct,
+    language_codes: Vec<Ident>,
+) -> TokenStream2 {
+    let ident = struct_struct.ident.clone();
+    let i18n_key = struct_struct.i18n_key.clone();
+
+    let language_code_match = language_codes
+        .iter()
+        .map(|language_code| {
+            quote! {
+                LanguageCode::#language_code => {
+                    t!(#i18n_key, locale = LanguageCode::#language_code.to_string().as_str()).to_string()
+                },
+            }
+        })
+        .collect::<Vec<TokenStream2>>();
+
+    quote! {
+        impl ToI18nString for #ident {
+            fn to_i18n_string(&self, language_code: LanguageCode) -> String {
+                use rust_i18n::t;
+
+                match language_code {
+                    #(#language_code_match)*
+                    _ => {
+                        panic!("Unsupported language code: {:?}", language_code);
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+struct StructStruct {
+    ident: syn::Ident,
+    i18n_key: TokenStream2,
+}
+
+#[derive(Debug, Clone)]
 struct EnumStruct {
     ident: syn::Ident,
     enum_variants: Vec<EnumVariant>,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 struct EnumVariant {
     variant: Variant,
     i18n_key_delegate: I18nKeyDelegate,
+}
+
+#[derive(Debug, Clone)]
+enum I18nKeyDelegate {
+    I18nKey(TokenStream2),
+    Delegate,
 }
 
 fn generate_inner_function(enum_variant: EnumVariant, language_codes: Vec<Ident>) -> TokenStream2 {
@@ -249,10 +336,4 @@ fn generate_delegate_inner_function(variant: Variant) -> TokenStream2 {
             panic!("Unit variant is not supported for i18n_delegate");
         }
     }
-}
-
-#[derive(Debug, Clone)]
-enum I18nKeyDelegate {
-    I18nKey(TokenStream2),
-    Delegate,
 }
