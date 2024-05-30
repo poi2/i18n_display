@@ -1,7 +1,5 @@
 extern crate proc_macro;
 
-mod i18n_display;
-
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, TokenStream as TokenStream2, TokenTree};
 use quote::ToTokens;
