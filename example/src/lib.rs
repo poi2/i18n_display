@@ -126,6 +126,8 @@ mod test {
         assert_eq!(error.to_i18n_string(language_code), expected.to_string());
     }
 
+    // TODO: Add test for 'delegate only supported for single tuple'.
+
     #[test_case(LanguageCode::En, "Resource not found.")]
     #[test_case(LanguageCode::Fr, "Ressource non trouvée.")]
     fn test_to_i18n_string_for_struct(language_code: LanguageCode, expected: &str) {
