@@ -1,7 +1,7 @@
 use strum::{Display, EnumString};
 
 /// LanguageCode
-/// I18nError based on ISO 639-1.
+/// LanguageCode based on ISO 639-1.
 /// ref: https://www.iso.org/iso-639-language-code
 /// ref: https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
 #[allow(dead_code, non_camel_case_types)]
