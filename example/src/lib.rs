@@ -30,6 +30,7 @@ mod test {
     #[test_case(LanguageCode::En, "Resource not found.")]
     #[test_case(LanguageCode::Fr, "Ressource non trouvée.")]
     fn test_to_i18n_string_for_single_tuple_like_enum(language_code: LanguageCode, expected: &str) {
+        #[allow(unused)]
         #[derive(I18nError)]
         #[i18n_language_codes(En, Fr)]
         enum DomainError {
@@ -48,6 +49,7 @@ mod test {
         language_code: LanguageCode,
         expected: &str,
     ) {
+        #[allow(unused)]
         #[derive(I18nError)]
         #[i18n_language_codes(En, Fr)]
         enum DomainError {
@@ -126,8 +128,6 @@ mod test {
         assert_eq!(error.to_i18n_string(language_code), expected.to_string());
     }
 
-    // TODO: Add test for 'delegate only supported for single tuple'.
-
     #[test_case(LanguageCode::En, "Resource not found.")]
     #[test_case(LanguageCode::Fr, "Ressource non trouvée.")]
     fn test_to_i18n_string_for_struct(language_code: LanguageCode, expected: &str) {
@@ -137,6 +137,48 @@ mod test {
         #[i18n_key("error.DomainError.ResourceNotFound")]
         struct ResourceNotFound {
             resource: String,
+        }
+
+        let error = ResourceNotFound {
+            resource: "Beer".to_string(),
+        };
+
+        assert_eq!(error.to_i18n_string(language_code), expected.to_string());
+    }
+
+    #[test_case(LanguageCode::En, "Resource not found.")]
+    #[test_case(LanguageCode::Fr, "Ressource non trouvée.")]
+    fn test_to_i18n_string_for_generics_struct(language_code: LanguageCode, expected: &str) {
+        #[allow(unused)]
+        #[derive(I18nError)]
+        #[i18n_language_codes(En, Fr)]
+        #[i18n_key("error.DomainError.ResourceNotFound")]
+        struct ResourceNotFound<T> {
+            resource: T,
+        }
+
+        let error = ResourceNotFound {
+            resource: "Beer".to_string(),
+        };
+
+        assert_eq!(error.to_i18n_string(language_code), expected.to_string());
+    }
+
+    #[test_case(LanguageCode::En, "Resource not found.")]
+    #[test_case(LanguageCode::Fr, "Ressource non trouvée.")]
+    fn test_to_i18n_string_for_generics_with_where_struct(
+        language_code: LanguageCode,
+        expected: &str,
+    ) {
+        #[allow(unused)]
+        #[derive(I18nError)]
+        #[i18n_language_codes(En, Fr)]
+        #[i18n_key("error.DomainError.ResourceNotFound")]
+        struct ResourceNotFound<T>
+        where
+            T: std::fmt::Display,
+        {
+            resource: T,
         }
 
         let error = ResourceNotFound {

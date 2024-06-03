@@ -10,7 +10,7 @@ pub(crate) enum DeriveTarget {
 
 #[derive(Debug, Clone)]
 pub(crate) struct ErrorOfStruct {
-    pub(crate) ident: syn::Ident,
+    pub(crate) input: DeriveInput,
     pub(crate) i18n_key: TokenStream2,
 }
 
@@ -108,7 +108,7 @@ pub(crate) fn get_derive_target(input: &DeriveInput) -> DeriveTarget {
             let token_stream = token_streams.first().unwrap();
 
             let struct_struct = ErrorOfStruct {
-                ident: input.ident.clone(),
+                input: input.clone(),
                 i18n_key: token_stream.clone(),
             };
 

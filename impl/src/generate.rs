@@ -42,14 +42,14 @@ fn generate_impl_for_enum(enum_struct: ErrorOfEnum, language_codes: Vec<Ident>) 
     }
 }
 
-// FIXME: Currently, only simple struct is supported. Generic struct is not supported.
 fn generate_impl_for_struct(
     struct_struct: ErrorOfStruct,
     language_codes: Vec<Ident>,
 ) -> TokenStream2 {
-    let ident = struct_struct.ident.clone();
-    let i18n_key = struct_struct.i18n_key.clone();
+    let ty = struct_struct.input.ident;
+    let (impl_generics, ty_generics, where_clause) = struct_struct.input.generics.split_for_impl();
 
+    let i18n_key = struct_struct.i18n_key;
     let language_code_match = language_codes
         .iter()
         .map(|language_code| {
@@ -63,7 +63,7 @@ fn generate_impl_for_struct(
 
     // FIXME: Change to `language_code: Into<LanguageCode>`.
     quote! {
-        impl ToI18nString for #ident {
+        impl #impl_generics ToI18nString for #ty #ty_generics #where_clause {
             fn to_i18n_string(&self, language_code: LanguageCode) -> String {
                 use rust_i18n::t;
 
