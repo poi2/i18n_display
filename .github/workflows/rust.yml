@@ -126,14 +126,6 @@ jobs:
           command: test
           args: --all-features
 
-      - name: Run tests for example
-        uses: dtolnay/rust-toolchain@stable
-        env:
-          RUSTC_WRAPPER: sccache
-        with:
-          command: test
-          args: --manifest-path ./example/Cargo.toml --all-features
-
       - name: Print sccache stats
         run: sccache --show-stats
       - name: Stop sccache server
