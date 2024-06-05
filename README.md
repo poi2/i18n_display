@@ -61,7 +61,7 @@ fn main() {
    1. Use `#[i18n_language_codes(En, Fr)]`. to specify the supported languages.
    2. `LanguageCode` based on ISO 639-1. Refer to the [rust-i18n/LanguageCode](https://github.com/poi2/i18n_error/blob/main/src/language_code.rs#L9) for more details.
 4. Define the Error Variants
-   1. Use ``#[i18n_key("{key of message in locale file}")]` to map error variants to messages in the locale files.
+   1. Use `#[i18n_key("{key of message in locale file}")]` to map error variants to messages in the locale files.
    2. This allows error messages to be generated from the locale file.
 5. Delegating Error Message Generation
    1. If you want to delegate the generation of error messages to an inner error, use `#[i18n_delegate]`.
@@ -132,3 +132,8 @@ error[E0599]: no method named `to_i18n_string` found for reference `&DomainError
 
 rustcE0599
 ```
+
+## License
+
+This project is licensed under the MIT License.  
+For more information on the license, please see the <a href="LICENSE">license</a>.

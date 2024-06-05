@@ -2,6 +2,7 @@
 name = "i18n_error"
 version = "0.1.0"
 authors = ["Daisuke Ito <daisuke.ito.cs@gmail.com>"]
+license = "MIT"
 edition = "2021"
 
 [dependencies]
