@@ -1,9 +1,15 @@
 [package]
 name = "i18n_error"
+description = """
+i18n_error provides a convenient way to define and manage error messages with internationalization (i18n) support.
+"""
 version = "0.1.0"
+edition = "2021"
 authors = ["Daisuke Ito <daisuke.ito.cs@gmail.com>"]
 license = "MIT"
-edition = "2021"
+keywords = ["i18n", "error", "message"]
+readme = "README.md"
+repository = "https://github.com/poi2/i18n_error"
 
 [dependencies]
 i18n_error_impl = { path = "impl" }
