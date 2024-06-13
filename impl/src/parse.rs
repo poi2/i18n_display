@@ -2,31 +2,31 @@ use proc_macro2::{Ident, TokenStream as TokenStream2, TokenTree};
 use quote::ToTokens;
 use syn::{Data, DeriveInput, Meta, Variant};
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub(crate) enum DeriveTarget {
     Struct(ErrorOfStruct),
     Enum(ErrorOfEnum),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub(crate) struct ErrorOfStruct {
     pub(crate) input: DeriveInput,
     pub(crate) i18n_key: TokenStream2,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub(crate) struct ErrorOfEnum {
     pub(crate) ident: syn::Ident,
     pub(crate) enum_variants: Vec<EnumVariant>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub(crate) struct EnumVariant {
     pub(crate) variant: Variant,
     pub(crate) i18n_key_delegate: I18nKeyDelegate,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub(crate) enum I18nKeyDelegate {
     I18nKey(TokenStream2),
     Delegate,
