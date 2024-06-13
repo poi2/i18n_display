@@ -1,9 +1,13 @@
 [package]
 name = "i18n_error_impl"
+description = """
+Implementation detail of the `i18n_error` crate.
+"""
 version = "0.1.0"
 edition = "2021"
 authors = ["Daisuke Ito <daisuke.ito.cs@gmail.com>"]
 license = "MIT"
+repository = "https://github.com/poi2/i18n_error"
 
 [lib]
 proc-macro = true
